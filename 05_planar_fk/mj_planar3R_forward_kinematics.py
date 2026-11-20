@@ -3,6 +3,8 @@ from mujoco.glfw import glfw
 import numpy as np
 import os
 
+from forward_kinematics import forward_kinematics 
+
 xml_path = 'planar_3R.xml'  # xml file (assumes this is in the same folder as this file)
 simend = 100  # simulation time
 print_camera_config = 0  # set to 1 to print camera config
@@ -136,18 +138,36 @@ init_controller(model, data)
 # set the controller
 mj.set_mjcb_control(controller)
 
-print(model.nq)
+# print(model.nq)
+key_id = model.key("home").id # 2nd way to set an angles 
+key_qpos=model.key_qpos[key_id] # 2nd way to set an angles 
+# print(key_qpos)
 while not glfw.window_should_close(window):
     time_prev = data.time
 
     while (data.time - time_prev < 1.0 / 60.0):
         
         data.time +=0.2
-        data.qpos=np.array([1.5707 , -1.5707 , 1.5707])
+        # data.qpos=np.array([1.5707 , -1.5707 , 1.5707]) # 1 way to set an angles 
+        data.qpos=key_qpos.copy() # 2nd way to set an angles 
+        
+        
         # mj.mj_step(model, data) # dunamics 
         mj.mj_forward(model,data) # only forward Kinematics 
         
-
+        # get postion of end Effector 
+        mj_end_effector = data.site("tip").xpos
+        print(mj_end_effector)
+        
+        
+        # manual forward kinematics with numpy code function
+        q=data.qpos.copy()
+        parms = [1.0, 1.0, 0.25]
+        end_effector_pos = forward_kinematics(q,parms)
+        print("Manual FK:", end_effector_pos)
+        print("MuJoCo FK:", data.site("tip").xpos[:2])
+        print(end_effector_pos)
+        
     if (data.time >= simend):
         break
 
