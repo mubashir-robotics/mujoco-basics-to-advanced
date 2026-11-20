@@ -136,11 +136,17 @@ init_controller(model, data)
 # set the controller
 mj.set_mjcb_control(controller)
 
+print(model.nq)
 while not glfw.window_should_close(window):
     time_prev = data.time
 
     while (data.time - time_prev < 1.0 / 60.0):
-        mj.mj_step(model, data)
+        
+        data.time +=0.2
+        data.qpos=np.array([1.5707 , -1.5707 , 1.5707])
+        # mj.mj_step(model, data) # dunamics 
+        mj.mj_forward(model,data) # only forward Kinematics 
+        
 
     if (data.time >= simend):
         break
